@@ -35,6 +35,48 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
         useCORS: true,
         allowTaint: true,
         imageTimeout: 15000,
+        onclone: (clonedDoc) => {
+          // Aggressively replace oklch colors in the cloned document
+          const elements = clonedDoc.getElementsByTagName('*');
+          for (let i = 0; i < elements.length; i++) {
+            const el = elements[i] as HTMLElement;
+            
+            // We need to check computed styles because Tailwind uses classes
+            // html2canvas will use these computed styles
+            // We'll override them with inline styles which have higher priority
+            
+            const style = window.getComputedStyle(el);
+            
+            const fixColor = (color: string) => {
+              if (!color || !color.includes('oklch')) return color;
+              
+              // If it's oklch, try to match common ones or just return a safe fallback
+              // This regex matches oklch(...) and replaces it with a safe hex
+              // Since we're in a clone, we can just replace the whole string
+              
+              if (color.includes('0.967 0.001 286.375')) return '#f9fafb'; // gray-50
+              if (color.includes('0.923 0.003 286.375')) return '#f3f4f6'; // gray-100
+              if (color.includes('0.872 0.006 286.375')) return '#e5e7eb'; // gray-200
+              if (color.includes('0.707 0.012 286.375')) return '#9ca3af'; // gray-400
+              if (color.includes('0.205 0.007 286.375')) return '#1f2937'; // gray-800
+              if (color.includes('0.145 0.005 286.375')) return '#111827'; // gray-900
+              if (color.includes('0.448 0.119 144.884')) return '#006437'; // flu-green
+              if (color.includes('0.327 0.123 24.57')) return '#83001D'; // flu-maroon
+              
+              // Generic fallback: if it's dark, make it black, if light, make it white
+              // This is a very rough heuristic but better than a crash
+              return color.includes('0.9') || color.includes('0.8') ? '#ffffff' : '#000000';
+            };
+
+            const color = style.color;
+            const bgColor = style.backgroundColor;
+            const borderColor = style.borderColor;
+
+            if (color.includes('oklch')) el.style.color = fixColor(color);
+            if (bgColor.includes('oklch')) el.style.backgroundColor = fixColor(bgColor);
+            if (borderColor.includes('oklch')) el.style.borderColor = fixColor(borderColor);
+          }
+        }
       });
       
       const blob = await new Promise<Blob | null>((resolve) => 
@@ -294,7 +336,7 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
                   <div className="flex justify-center overflow-hidden py-4 bg-gray-100 rounded-xl">
                     <div 
                       ref={el => reportRefs.current[employee.id] = el}
-                      className="bg-white w-[350px] font-sans text-gray-900 p-6 flex flex-col gap-6"
+                      className="bg-white w-[350px] font-sans text-[#111827] p-6 flex flex-col gap-6"
                     >
                       {/* System Header matching screenshot */}
                       <div className="flex flex-col gap-4">
@@ -306,23 +348,23 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
                               className="w-8 h-8 object-contain"
                               referrerPolicy="no-referrer"
                             />
-                            <h1 className="text-xl font-black tracking-tighter text-flu-maroon uppercase">Maracana Flu</h1>
+                            <h1 className="text-xl font-black tracking-tighter text-[#83001D] uppercase">Maracana Flu</h1>
                           </div>
-                          <span className="text-[11px] font-bold text-gray-400">{new Date().toLocaleDateString('pt-BR')}</span>
+                          <span className="text-[11px] font-bold text-[#9ca3af]">{new Date().toLocaleDateString('pt-BR')}</span>
                         </div>
 
                         <div className="flex flex-col -mt-2">
-                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                          <span className="text-[10px] font-black text-[#9ca3af] uppercase tracking-widest">
                             {globalReportType === 'distribution' ? 'Relatório de Distribuição' : 'Fechamento de Vendas'}
                           </span>
-                          <span className="text-xl font-black uppercase text-gray-800">{employee.sector} - {employee.name}</span>
+                          <span className="text-xl font-black uppercase text-[#1f2937]">{employee.sector} - {employee.name}</span>
                         </div>
 
-                        <div className="h-[2px] bg-flu-maroon w-full"></div>
+                        <div className="h-[2px] bg-[#83001D] w-full"></div>
                       </div>
                       
                       <div className="flex flex-col gap-3">
-                        <div className="grid grid-cols-[1.5fr_0.5fr_1fr_1fr] text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">
+                        <div className="grid grid-cols-[1.5fr_0.5fr_1fr_1fr] text-[10px] font-black text-[#9ca3af] uppercase tracking-widest px-2">
                           <div>Descrição</div>
                           <div className="text-center">{globalReportType === 'distribution' ? 'Qtd' : 'Vend'}</div>
                           <div className="text-right">{globalReportType === 'distribution' ? 'PDV' : 'Comis. V'}</div>
@@ -343,13 +385,13 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
                                 groups[desc].totalPrice += (Number(item.quantity) || 0) * price;
                               });
                               return Object.values(groups).map((group, idx) => (
-                                <div key={idx} className="grid grid-cols-[1.5fr_0.5fr_1fr_1fr] text-xs font-bold bg-gray-50 rounded-2xl p-3 items-center">
-                                  <div className="truncate pr-2 text-gray-800">{group.description}</div>
+                                <div key={idx} className="grid grid-cols-[1.5fr_0.5fr_1fr_1fr] text-xs font-bold bg-[#f9fafb] rounded-2xl p-3 items-center">
+                                  <div className="truncate pr-2 text-[#1f2937]">{group.description}</div>
                                   <div className="flex justify-center">
-                                    <span className="bg-white px-3 py-1 rounded-lg shadow-sm border border-gray-100 min-w-[35px] text-center">{group.quantity}</span>
+                                    <span className="bg-white px-3 py-1 rounded-lg shadow-sm border border-[#f3f4f6] min-w-[35px] text-center">{group.quantity}</span>
                                   </div>
-                                  <div className="text-right text-gray-400 font-medium">{formatCurrency(group.unitPrice)}</div>
-                                  <div className="text-right text-flu-green font-black">{formatCurrency(group.totalPrice)}</div>
+                                  <div className="text-right text-[#9ca3af] font-medium">{formatCurrency(group.unitPrice)}</div>
+                                  <div className="text-right text-[#006437] font-black">{formatCurrency(group.totalPrice)}</div>
                                 </div>
                               ));
                             })()
@@ -368,13 +410,13 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
                                 groups[desc].totalCV += sold * commissionV;
                               });
                               return Object.values(groups).map((group, idx) => (
-                                <div key={idx} className="grid grid-cols-[1.5fr_0.5fr_1fr_1fr] text-xs font-bold bg-gray-50 rounded-2xl p-3 items-center">
-                                  <div className="truncate pr-2 text-gray-800">{group.description}</div>
+                                <div key={idx} className="grid grid-cols-[1.5fr_0.5fr_1fr_1fr] text-xs font-bold bg-[#f9fafb] rounded-2xl p-3 items-center">
+                                  <div className="truncate pr-2 text-[#1f2937]">{group.description}</div>
                                   <div className="flex justify-center">
-                                    <span className="bg-white px-3 py-1 rounded-lg shadow-sm border border-gray-100 min-w-[35px] text-center">{group.sold}</span>
+                                    <span className="bg-white px-3 py-1 rounded-lg shadow-sm border border-[#f3f4f6] min-w-[35px] text-center">{group.sold}</span>
                                   </div>
-                                  <div className="text-right text-gray-400 font-medium">{formatCurrency(group.unitCV)}</div>
-                                  <div className="text-right text-flu-green font-black">{formatCurrency(group.totalCV)}</div>
+                                  <div className="text-right text-[#9ca3af] font-medium">{formatCurrency(group.unitCV)}</div>
+                                  <div className="text-right text-[#006437] font-black">{formatCurrency(group.totalCV)}</div>
                                 </div>
                               ));
                             })()
@@ -383,42 +425,42 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
                       </div>
 
                       {/* System Footer matching screenshot */}
-                      <div className="flex flex-col gap-4 pt-4 border-t border-gray-100">
+                      <div className="flex flex-col gap-4 pt-4 border-t border-[#f3f4f6]">
                         {globalReportType === 'distribution' ? (
                           <>
                             <div className="flex justify-between items-center px-4">
-                              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Fundo de Caixa</span>
-                              <span className="text-sm font-black text-gray-800">{formatCurrency(globalCashFloat)}</span>
+                              <span className="text-[10px] font-black text-[#9ca3af] uppercase tracking-widest">Fundo de Caixa</span>
+                              <span className="text-sm font-black text-[#1f2937]">{formatCurrency(globalCashFloat)}</span>
                             </div>
-                            <div className="bg-gray-50 p-5 rounded-[2rem] border border-gray-100 flex justify-between items-center">
-                              <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Valor Total</span>
-                              <span className="text-xl font-black text-gray-800">{formatCurrency(grandTotalDist)}</span>
+                            <div className="bg-[#f9fafb] p-5 rounded-[2rem] border border-[#f3f4f6] flex justify-between items-center">
+                              <span className="text-xs font-black text-[#9ca3af] uppercase tracking-widest">Valor Total</span>
+                              <span className="text-xl font-black text-[#1f2937]">{formatCurrency(grandTotalDist)}</span>
                             </div>
                           </>
                         ) : (
                           <>
                             <div className="grid grid-cols-2 gap-4 px-4">
                               <div className="flex flex-col">
-                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Total Vendido</span>
-                                <span className="text-sm font-black text-gray-800">{formatCurrency(totalSoldValue)}</span>
+                                <span className="text-[9px] font-black text-[#9ca3af] uppercase tracking-widest">Total Vendido</span>
+                                <span className="text-sm font-black text-[#1f2937]">{formatCurrency(totalSoldValue)}</span>
                               </div>
                               <div className="flex flex-col items-end">
-                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Divergência</span>
-                                <span className={cn("text-sm font-black", divergence < 0 ? "text-red-600" : "text-flu-green")}>
+                                <span className="text-[9px] font-black text-[#9ca3af] uppercase tracking-widest">Divergência</span>
+                                <span className={cn("text-sm font-black", divergence < 0 ? "text-[#dc2626]" : "text-[#006437]")}>
                                   {formatCurrency(divergence)}
                                 </span>
                               </div>
                             </div>
-                            <div className="bg-gray-50 p-5 rounded-[2rem] border border-gray-100 flex justify-between items-center">
-                              <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Pagamento Func.</span>
-                              <span className="text-xl font-black text-gray-800">{formatCurrency(finalCommission)}</span>
+                            <div className="bg-[#f9fafb] p-5 rounded-[2rem] border border-[#f3f4f6] flex justify-between items-center">
+                              <span className="text-xs font-black text-[#9ca3af] uppercase tracking-widest">Pagamento Func.</span>
+                              <span className="text-xl font-black text-[#1f2937]">{formatCurrency(finalCommission)}</span>
                             </div>
                           </>
                         )}
                       </div>
 
                       <div className="text-center">
-                        <p className="text-[9px] font-bold text-gray-300 uppercase tracking-[0.2em]">Maracana Fluminense Digital</p>
+                        <p className="text-[9px] font-bold text-[#d1d5db] uppercase tracking-[0.2em]">Maracana Fluminense Digital</p>
                       </div>
                     </div>
                   </div>
@@ -479,20 +521,20 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
                             className="w-8 h-8 object-contain"
                             referrerPolicy="no-referrer"
                           />
-                          <h1 className="text-xl font-black tracking-tighter text-flu-maroon uppercase">Maracana Flu</h1>
+                          <h1 className="text-xl font-black tracking-tighter text-[#83001D] uppercase">Maracana Flu</h1>
                         </div>
-                        <span className="text-[11px] font-bold text-gray-400">{new Date().toLocaleDateString('pt-BR')}</span>
+                        <span className="text-[11px] font-bold text-[#9ca3af]">{new Date().toLocaleDateString('pt-BR')}</span>
                       </div>
 
                       <div className="flex flex-col -mt-2">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Relatório de Gestão</span>
-                        <span className="text-xl font-black uppercase text-gray-800">GESTOR - COMISSÃO G</span>
+                        <span className="text-[10px] font-black text-[#9ca3af] uppercase tracking-widest">Relatório de Gestão</span>
+                        <span className="text-xl font-black uppercase text-[#1f2937]">GESTOR - COMISSÃO G</span>
                       </div>
 
-                      <div className="h-[2px] bg-flu-maroon w-full"></div>
+                      <div className="h-[2px] bg-[#83001D] w-full"></div>
 
                       <div className="flex flex-col gap-3">
-                        <div className="grid grid-cols-[1.5fr_0.5fr_1fr_1fr] text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">
+                        <div className="grid grid-cols-[1.5fr_0.5fr_1fr_1fr] text-[10px] font-black text-[#9ca3af] uppercase tracking-widest px-2">
                           <div>Descrição</div>
                           <div className="text-center">Vend</div>
                           <div className="text-right">Comis. G</div>
@@ -500,21 +542,21 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
                         </div>
                         <div className="flex flex-col gap-2">
                           {gestorReport.map((group, idx) => (
-                            <div key={idx} className="grid grid-cols-[1.5fr_0.5fr_1fr_1fr] text-xs font-bold bg-gray-50 rounded-2xl p-3 items-center">
-                              <div className="truncate pr-2 text-gray-800">{group.description}</div>
+                            <div key={idx} className="grid grid-cols-[1.5fr_0.5fr_1fr_1fr] text-xs font-bold bg-[#f9fafb] rounded-2xl p-3 items-center">
+                              <div className="truncate pr-2 text-[#1f2937]">{group.description}</div>
                               <div className="flex justify-center">
-                                <span className="bg-white px-3 py-1 rounded-lg shadow-sm border border-gray-100 min-w-[35px] text-center">{group.sold}</span>
+                                <span className="bg-white px-3 py-1 rounded-lg shadow-sm border border-[#f3f4f6] min-w-[35px] text-center">{group.sold}</span>
                               </div>
-                              <div className="text-right text-gray-400 font-medium">{formatCurrency(group.unitCG)}</div>
-                              <div className="text-right text-flu-green font-black">{formatCurrency(group.totalCG)}</div>
+                              <div className="text-right text-[#9ca3af] font-medium">{formatCurrency(group.unitCG)}</div>
+                              <div className="text-right text-[#006437] font-black">{formatCurrency(group.totalCG)}</div>
                             </div>
                           ))}
                         </div>
                       </div>
 
-                      <div className="mt-4 bg-gray-50 p-5 rounded-[2rem] border border-gray-100 flex justify-between items-center">
-                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Total Comissão G</span>
-                        <span className="text-xl font-black text-gray-800">{formatCurrency(grandTotalGeneralCommission)}</span>
+                      <div className="mt-4 bg-[#f9fafb] p-5 rounded-[2rem] border border-[#f3f4f6] flex justify-between items-center">
+                        <span className="text-xs font-black text-[#9ca3af] uppercase tracking-widest">Total Comissão G</span>
+                        <span className="text-xl font-black text-[#1f2937]">{formatCurrency(grandTotalGeneralCommission)}</span>
                       </div>
                     </div>
                   </div>
