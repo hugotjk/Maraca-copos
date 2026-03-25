@@ -35,6 +35,8 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
         useCORS: true,
         allowTaint: true,
         imageTimeout: 15000,
+        width: element.scrollWidth,
+        height: element.scrollHeight,
         onclone: (clonedDoc) => {
           // Aggressively replace oklch colors in the cloned document
           const elements = clonedDoc.getElementsByTagName('*');
@@ -336,7 +338,7 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
                   <div className="flex justify-center overflow-hidden py-4 bg-gray-100 rounded-xl">
                     <div 
                       ref={el => reportRefs.current[employee.id] = el}
-                      className="bg-white w-[350px] font-sans text-[#111827] p-6 flex flex-col gap-6"
+                      className="bg-white w-[450px] min-h-[450px] font-sans text-[#111827] p-8 flex flex-col gap-6"
                     >
                       {/* System Header matching screenshot */}
                       <div className="flex flex-col gap-4">
@@ -364,7 +366,7 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
                       </div>
                       
                       <div className="flex flex-col gap-3">
-                        <div className="grid grid-cols-[1.5fr_0.5fr_1fr_1fr] text-[10px] font-black text-[#9ca3af] uppercase tracking-widest px-2">
+                        <div className="grid grid-cols-[2.2fr_0.6fr_1.2fr_1.4fr] text-[10px] font-black text-[#9ca3af] uppercase tracking-widest px-2">
                           <div>Descrição</div>
                           <div className="text-center">{globalReportType === 'distribution' ? 'Qtd' : 'Vend'}</div>
                           <div className="text-right">{globalReportType === 'distribution' ? 'PDV' : 'Comis. V'}</div>
@@ -385,8 +387,8 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
                                 groups[desc].totalPrice += (Number(item.quantity) || 0) * price;
                               });
                               return Object.values(groups).map((group, idx) => (
-                                <div key={idx} className="grid grid-cols-[1.5fr_0.5fr_1fr_1fr] text-xs font-bold bg-[#f9fafb] rounded-2xl p-3 items-center">
-                                  <div className="truncate pr-2 text-[#1f2937]">{group.description}</div>
+                                <div key={idx} className="grid grid-cols-[2.2fr_0.6fr_1.2fr_1.4fr] text-xs font-bold bg-[#f9fafb] rounded-2xl p-3 items-center">
+                                  <div className="pr-2 text-[#1f2937] break-words">{group.description}</div>
                                   <div className="flex justify-center">
                                     <span className="bg-white px-3 py-1 rounded-lg shadow-sm border border-[#f3f4f6] min-w-[35px] text-center">{group.quantity}</span>
                                   </div>
@@ -410,8 +412,8 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
                                 groups[desc].totalCV += sold * commissionV;
                               });
                               return Object.values(groups).map((group, idx) => (
-                                <div key={idx} className="grid grid-cols-[1.5fr_0.5fr_1fr_1fr] text-xs font-bold bg-[#f9fafb] rounded-2xl p-3 items-center">
-                                  <div className="truncate pr-2 text-[#1f2937]">{group.description}</div>
+                                <div key={idx} className="grid grid-cols-[2.2fr_0.6fr_1.2fr_1.4fr] text-xs font-bold bg-[#f9fafb] rounded-2xl p-3 items-center">
+                                  <div className="pr-2 text-[#1f2937] break-words">{group.description}</div>
                                   <div className="flex justify-center">
                                     <span className="bg-white px-3 py-1 rounded-lg shadow-sm border border-[#f3f4f6] min-w-[35px] text-center">{group.sold}</span>
                                   </div>
@@ -509,7 +511,7 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
                 <div className="flex justify-center overflow-hidden py-4 bg-gray-100 rounded-xl">
                   <div 
                     ref={el => reportRefs.current['gestor'] = el}
-                    className="bg-white w-[350px] font-sans text-gray-900 p-6 flex flex-col gap-6"
+                    className="bg-white w-[450px] min-h-[450px] font-sans text-[#111827] p-8 flex flex-col gap-6"
                   >
                     <div className="flex flex-col gap-4">
                       {/* Header matching screenshot */}
@@ -534,7 +536,7 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
                       <div className="h-[2px] bg-[#83001D] w-full"></div>
 
                       <div className="flex flex-col gap-3">
-                        <div className="grid grid-cols-[1.5fr_0.5fr_1fr_1fr] text-[10px] font-black text-[#9ca3af] uppercase tracking-widest px-2">
+                        <div className="grid grid-cols-[2.2fr_0.6fr_1.2fr_1.4fr] text-[10px] font-black text-[#9ca3af] uppercase tracking-widest px-2">
                           <div>Descrição</div>
                           <div className="text-center">Vend</div>
                           <div className="text-right">Comis. G</div>
@@ -542,8 +544,8 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
                         </div>
                         <div className="flex flex-col gap-2">
                           {gestorReport.map((group, idx) => (
-                            <div key={idx} className="grid grid-cols-[1.5fr_0.5fr_1fr_1fr] text-xs font-bold bg-[#f9fafb] rounded-2xl p-3 items-center">
-                              <div className="truncate pr-2 text-[#1f2937]">{group.description}</div>
+                            <div key={idx} className="grid grid-cols-[2.2fr_0.6fr_1.2fr_1.4fr] text-xs font-bold bg-[#f9fafb] rounded-2xl p-3 items-center">
+                              <div className="pr-2 text-[#1f2937] break-words">{group.description}</div>
                               <div className="flex justify-center">
                                 <span className="bg-white px-3 py-1 rounded-lg shadow-sm border border-[#f3f4f6] min-w-[35px] text-center">{group.sold}</span>
                               </div>
