@@ -17,6 +17,49 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
   const [globalReportType, setGlobalReportType] = useState<'distribution' | 'closing'>('distribution');
   const reportRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  const shareTextOnWhatsApp = (employeeId: string) => {
+    if (!distribution) return;
+    
+    let text = "";
+    if (employeeId === 'gestor') {
+      text = `*RELATÓRIO DE GESTÃO - GESTOR*\n\n`;
+      text += `*Data:* ${new Date().toLocaleDateString('pt-BR')}\n`;
+      text += `*Total Comissão G:* ${formatCurrency(grandTotalGeneralCommission)}\n\n`;
+      text += `_Gerado por Maracana Flu Digital_`;
+    } else {
+      const data = distribution[employeeId];
+      if (!data) return;
+      
+      const totalSoldValue = data.items.reduce((sum, i) => sum + ((i.quantity - i.returned) * (i.product.price || 0)), 0);
+      const totalCommission = data.items.reduce((sum, i) => {
+        const sold = i.quantity - i.returned;
+        return sum + (sold * (i.product.commissionV || 0));
+      }, 0);
+      const totalReceived = data.cashReceived + data.cardReceived + data.sangria;
+      const expectedCash = totalSoldValue + data.cashFloat;
+      const divergence = totalReceived - expectedCash;
+      const finalCommission = Math.max(0, totalCommission + (divergence < 0 ? divergence : 0));
+
+      text = `*${globalReportType === 'distribution' ? 'DISTRIBUIÇÃO' : 'FECHAMENTO'}: ${data.employee.name}*\n`;
+      text += `*Setor:* ${data.employee.sector}\n`;
+      text += `*Data:* ${new Date().toLocaleDateString('pt-BR')}\n\n`;
+      
+      if (globalReportType === 'distribution') {
+        const totalDist = data.items.reduce((sum, i) => sum + (i.quantity * i.product.price), 0) + globalCashFloat;
+        text += `*Total em Produtos:* ${formatCurrency(totalDist)}\n`;
+      } else {
+        text += `*Total Vendido:* ${formatCurrency(totalSoldValue)}\n`;
+        text += `*Divergência:* ${formatCurrency(divergence)}\n`;
+        text += `*Pagamento:* ${formatCurrency(finalCommission)}\n`;
+      }
+      
+      text += `\n_Gerado por Maracana Flu Digital_`;
+    }
+
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
+
   const shareOnWhatsApp = async (employeeId: string) => {
     const element = reportRefs.current[employeeId];
     if (!element) return;
@@ -399,7 +442,14 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
                       className="flex-1 min-w-[140px] bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 font-bold text-sm"
                     >
                       <MessageCircle className="w-4 h-4" />
-                      WhatsApp (Foto)
+                      Enviar Foto
+                    </button>
+                    <button
+                      onClick={() => shareTextOnWhatsApp(employee.id)}
+                      className="flex-1 min-w-[140px] bg-white border-2 border-green-600 text-green-700 hover:bg-green-50 px-4 py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 font-bold text-sm"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Enviar Texto
                     </button>
                   </div>
                 </div>
@@ -481,13 +531,22 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => shareOnWhatsApp('gestor')}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 font-bold text-sm"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  WhatsApp (Foto GESTOR)
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => shareOnWhatsApp('gestor')}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 font-bold text-sm"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Enviar Foto
+                  </button>
+                  <button
+                    onClick={() => shareTextOnWhatsApp('gestor')}
+                    className="flex-1 bg-white border-2 border-green-600 text-green-700 hover:bg-green-50 px-4 py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 font-bold text-sm"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Enviar Texto
+                  </button>
+                </div>
               </div>
             )}
           </div>
