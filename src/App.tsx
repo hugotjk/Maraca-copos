@@ -15,32 +15,32 @@ import { LayoutDashboard, Package, Users, Share2, FileText, RotateCcw } from 'lu
 import { cn } from './lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 
-type Tab = 'stock' | 'employees' | 'distribution' | 'returns' | 'reports';
+type Tab = 'home' | 'stock' | 'employees' | 'distribution' | 'returns' | 'reports';
 
 const INITIAL_PRODUCTS: Product[] = [
-  { id: '1', name: 'COPO Jogo', description: 'Jogo', pdv: 20, commission: 1.8, quantity: 0 },
-  { id: '2', name: 'COPO Samuel Xavier', description: 'Idolo', pdv: 25, commission: 1.8, quantity: 0 },
-  { id: '3', name: 'COPO Fabio Lib', description: 'Idolo', pdv: 25, commission: 1.8, quantity: 0 },
-  { id: '4', name: 'COPO 1951', description: 'Jogo Antigo', pdv: 20, commission: 1.8, quantity: 0 },
-  { id: '5', name: 'COPO 1969', description: 'Jogo Antigo', pdv: 20, commission: 1.8, quantity: 0 },
-  { id: '6', name: 'COPO 1976', description: 'Jogo Antigo', pdv: 20, commission: 1.8, quantity: 0 },
-  { id: '7', name: 'COPO John Kennedy', description: 'Idolo', pdv: 25, commission: 1.8, quantity: 0 },
-  { id: '8', name: 'COPO Quarteto', description: 'Outros', pdv: 25, commission: 1.8, quantity: 0 },
-  { id: '9', name: 'COPO Cannobio', description: 'Idolo', pdv: 25, commission: 1.8, quantity: 0 },
-  { id: '10', name: 'COPO Cordinha V.', description: 'Cordao', pdv: 25, commission: 2.5, quantity: 0 },
-  { id: '11', name: 'COPO Cordinha G.', description: 'Cordao', pdv: 25, commission: 2.5, quantity: 0 },
-  { id: '12', name: 'COPO Cordinha B.', description: 'Cordao', pdv: 25, commission: 2.5, quantity: 0 },
-  { id: '13', name: 'COPO Promo 10$', description: 'Promo 2/20', pdv: 10, commission: 1.0, quantity: 0 },
-  { id: '14', name: 'COPO Promo 15$', description: 'Promo/15', pdv: 15, commission: 1.0, quantity: 0 },
-  { id: '15', name: 'COPO 1902', description: 'Outros', pdv: 25, commission: 1.8, quantity: 0 },
-  { id: '16', name: 'COPO Bandeiras', description: 'Outros', pdv: 25, commission: 1.8, quantity: 0 },
-  { id: '17', name: 'COPO Sou Tricolor', description: 'Outros', pdv: 25, commission: 1.8, quantity: 0 },
-  { id: '18', name: 'COPO Fabio', description: 'Idolo', pdv: 25, commission: 1.8, quantity: 0 },
-  { id: '19', name: 'COPO Cano L', description: 'Idolo', pdv: 25, commission: 1.8, quantity: 0 },
-  { id: '20', name: 'COPO Cano Arg.', description: 'Idolo', pdv: 25, commission: 1.8, quantity: 0 },
-  { id: '21', name: 'COPO America Del Flu', description: 'Outros', pdv: 25, commission: 1.8, quantity: 0 },
-  { id: '22', name: 'COPO Fabio 1391', description: 'Idolo', pdv: 25, commission: 1.8, quantity: 0 },
-  { id: '23', name: 'COPO Guerreiras', description: 'Outros', pdv: 25, commission: 1.8, quantity: 0 }
+  { id: '1', name: 'COPO Jogo', description: 'Jogo', price: 20, commissionV: 1.8, commissionG: 1.2, quantity: 0 },
+  { id: '2', name: 'COPO Samuel Xavier', description: 'Idolo', price: 25, commissionV: 1.8, commissionG: 1.2, quantity: 0 },
+  { id: '3', name: 'COPO Fabio Lib', description: 'Idolo', price: 25, commissionV: 1.8, commissionG: 1.2, quantity: 0 },
+  { id: '4', name: 'COPO 1951', description: 'Jogo Antigo', price: 20, commissionV: 1.8, commissionG: 1.2, quantity: 0 },
+  { id: '5', name: 'COPO 1969', description: 'Jogo Antigo', price: 20, commissionV: 1.8, commissionG: 1.2, quantity: 0 },
+  { id: '6', name: 'COPO 1976', description: 'Jogo Antigo', price: 20, commissionV: 1.8, commissionG: 1.2, quantity: 0 },
+  { id: '7', name: 'COPO John Kennedy', description: 'Idolo', price: 25, commissionV: 1.8, commissionG: 1.2, quantity: 0 },
+  { id: '8', name: 'COPO Quarteto', description: 'Outros', price: 25, commissionV: 1.8, commissionG: 1.2, quantity: 0 },
+  { id: '9', name: 'COPO Cannobio', description: 'Idolo', price: 25, commissionV: 1.8, commissionG: 1.2, quantity: 0 },
+  { id: '10', name: 'COPO Cordinha V.', description: 'Cordao', price: 25, commissionV: 2.5, commissionG: 1.5, quantity: 0 },
+  { id: '11', name: 'COPO Cordinha G.', description: 'Cordao', price: 25, commissionV: 2.5, commissionG: 1.5, quantity: 0 },
+  { id: '12', name: 'COPO Cordinha B.', description: 'Cordao', price: 25, commissionV: 2.5, commissionG: 1.5, quantity: 0 },
+  { id: '13', name: 'COPO Promo 10$', description: 'Promo 2/20', price: 10, commissionV: 1.0, commissionG: 1.2, quantity: 0 },
+  { id: '14', name: 'COPO Promo 15$', description: 'Promo/15', price: 15, commissionV: 1.0, commissionG: 1.2, quantity: 0 },
+  { id: '15', name: 'COPO 1902', description: 'Outros', price: 25, commissionV: 1.8, commissionG: 1.2, quantity: 0 },
+  { id: '16', name: 'COPO Bandeiras', description: 'Outros', price: 25, commissionV: 1.8, commissionG: 1.2, quantity: 0 },
+  { id: '17', name: 'COPO Sou Tricolor', description: 'Outros', price: 25, commissionV: 1.8, commissionG: 1.2, quantity: 0 },
+  { id: '18', name: 'COPO Fabio', description: 'Idolo', price: 25, commissionV: 1.8, commissionG: 1.2, quantity: 0 },
+  { id: '19', name: 'COPO Cano L', description: 'Idolo', price: 25, commissionV: 1.8, commissionG: 1.2, quantity: 0 },
+  { id: '20', name: 'COPO Cano Arg.', description: 'Idolo', price: 25, commissionV: 1.8, commissionG: 1.2, quantity: 0 },
+  { id: '21', name: 'COPO America Del Flu', description: 'Outros', price: 25, commissionV: 1.8, commissionG: 1.2, quantity: 0 },
+  { id: '22', name: 'COPO Fabio 1391', description: 'Idolo', price: 25, commissionV: 1.8, commissionG: 1.2, quantity: 0 },
+  { id: '23', name: 'COPO Guerreiras', description: 'Outros', price: 25, commissionV: 1.8, commissionG: 1.2, quantity: 0 }
 ];
 
 export default function App() {
@@ -48,42 +48,83 @@ export default function App() {
   const [employees, setEmployees] = useLocalStorage<Employee[]>('stockflow_employees', []);
   const [distribution, setDistribution] = useLocalStorage<DistributionResult | null>('stockflow_distribution', null);
   const [globalCashFloat, setGlobalCashFloat] = useLocalStorage<number>('stockflow_global_cash_float', 0);
-  const [activeTab, setActiveTab] = useState<Tab>('stock');
+  const [activeTab, setActiveTab] = useState<Tab>('home');
 
-  const tabs = [
-    { id: 'stock', label: 'Estoque', icon: Package },
-    { id: 'employees', label: 'Equipe', icon: Users },
-    { id: 'distribution', label: 'Distribuição', icon: Share2 },
-    { id: 'returns', label: 'Devolução', icon: RotateCcw },
-    { id: 'reports', label: 'Relatórios', icon: FileText },
+  const menuItems = [
+    { id: 'stock', label: 'ESTOQUE', icon: Package },
+    { id: 'employees', label: 'EQUIPE', icon: Users },
+    { id: 'distribution', label: 'DISTRIBUIÇÃO', icon: Share2 },
+    { id: 'returns', label: 'DEVOLUÇÃO', icon: RotateCcw },
+    { id: 'reports', label: 'RELATÓRIOS', icon: FileText },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col pb-20">
+    <div className="min-h-screen bg-gray-50 flex flex-col relative overflow-hidden">
+      {/* Watermark Background */}
+      <div 
+        className="fixed inset-0 pointer-events-none opacity-[0.07] z-0 flex items-center justify-center"
+        style={{
+          backgroundImage: 'url(https://escudosfc.com.br/images/fluminense.png)',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+          backgroundSize: '80% auto',
+        }}
+      />
+
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 p-4 sticky top-0 z-40 shadow-sm">
-        <div className="flex items-center gap-3 font-black text-xl text-flu-maroon tracking-tight">
-          <img 
-            src="https://upload.wikimedia.org/wikipedia/pt/a/a3/Fluminense_FC_escudo.png" 
-            alt="Fluminense Logo" 
-            className="w-8 h-8 object-contain"
-            referrerPolicy="no-referrer"
-          />
-          Maracana Fluminense
+      <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 p-4 fixed top-0 left-0 right-0 z-40 shadow-sm">
+        <div className="flex items-center justify-between max-w-md mx-auto w-full">
+          <div className="flex items-center gap-3 font-black text-xl text-flu-maroon tracking-tight">
+            <img 
+              src="https://escudosfc.com.br/images/fluminense.png" 
+              alt="Fluminense Logo" 
+              className="w-8 h-8 object-contain"
+              referrerPolicy="no-referrer"
+            />
+            Maracana Fluminense
+          </div>
+          {activeTab !== 'home' && (
+            <button 
+              onClick={() => setActiveTab('home')}
+              className="text-[10px] font-black uppercase tracking-widest bg-gray-100 px-3 py-1.5 rounded-lg text-gray-500 hover:bg-gray-200 transition-colors"
+            >
+              Início
+            </button>
+          )}
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 p-4 overflow-x-hidden">
-        <div className="max-w-md mx-auto">
+      <main className="flex-1 p-4 pt-20 overflow-x-hidden relative z-10">
+        <div className="max-w-md mx-auto h-full">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.2 }}
+              className="h-full"
             >
+              {activeTab === 'home' && (
+                <div className="grid grid-cols-1 gap-2 pt-4">
+                  {menuItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => setActiveTab(item.id as Tab)}
+                        className="bg-white py-2 px-4 rounded-2xl shadow-md border border-gray-100 flex items-center gap-4 hover:bg-gray-50 transition-all active:scale-95 group"
+                      >
+                        <div className="bg-flu-maroon/10 p-2 rounded-xl group-hover:bg-flu-maroon/20 transition-colors">
+                          <Icon className="w-5 h-5 text-flu-maroon" />
+                        </div>
+                        <span className="text-sm font-black text-gray-800 tracking-tight">{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
               {activeTab === 'stock' && (
                 <StockManager products={products} setProducts={setProducts} />
               )}
@@ -119,33 +160,6 @@ export default function App() {
           </AnimatePresence>
         </div>
       </main>
-
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center h-16 px-2 z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as Tab)}
-              className={cn(
-                "flex flex-col items-center justify-center flex-1 h-full transition-all duration-200 relative",
-                isActive ? "text-flu-maroon" : "text-gray-400"
-              )}
-            >
-              {isActive && (
-                <motion.div 
-                  layoutId="nav-indicator"
-                  className="absolute top-0 w-12 h-1 bg-flu-maroon rounded-b-full"
-                />
-              )}
-              <Icon className={cn("w-6 h-6 mb-1", isActive ? "scale-110" : "scale-100")} />
-              <span className="text-[10px] font-bold uppercase tracking-wider">{tab.label}</span>
-            </button>
-          );
-        })}
-      </nav>
     </div>
   );
 }

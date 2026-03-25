@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Product, Employee, DistributionResult } from '../types';
-import { Share2, RefreshCw, AlertCircle } from 'lucide-react';
+import { Share2, RefreshCw, AlertCircle, ChevronUp, ChevronDown } from 'lucide-react';
+import { cn } from '../lib/utils';
 
 interface DistributionManagerProps {
   products: Product[];
@@ -56,24 +57,32 @@ export function DistributionManager({
     setDistribution(result);
   };
 
-  const handleQuantityChange = (employeeId: string, productId: string, value: string) => {
+  const handleQuantityChange = (employeeId: string, productId: string, value: string | number) => {
     if (!distribution) return;
-    const newQty = parseInt(value) || 0;
+    const newQty = typeof value === 'string' ? parseInt(value) || 0 : value;
     const newDist = { ...distribution };
     const empData = newDist[employeeId];
     const item = empData.items.find(i => i.product.id === productId);
     if (item) {
-      item.quantity = newQty;
+      item.quantity = Math.max(0, newQty);
     }
     setDistribution(newDist);
   };
 
-  const totalDistributed = useMemo(() => {
-    if (!distribution) return 0;
-    return Object.values(distribution).reduce((acc, emp) => {
-      return acc + emp.items.reduce((sum, item) => sum + item.quantity, 0);
-    }, 0);
+  const totalDistributedByProduct = useMemo(() => {
+    if (!distribution) return {};
+    const totals: Record<string, number> = {};
+    Object.values(distribution).forEach(emp => {
+      emp.items.forEach(item => {
+        totals[item.product.id] = (totals[item.product.id] || 0) + item.quantity;
+      });
+    });
+    return totals;
   }, [distribution]);
+
+  const totalDistributedCount = useMemo(() => {
+    return Object.values(totalDistributedByProduct).reduce((acc: number, val: number) => acc + val, 0);
+  }, [totalDistributedByProduct]);
 
   return (
     <div className="space-y-6">
@@ -88,7 +97,7 @@ export function DistributionManager({
           className="bg-flu-maroon hover:bg-opacity-90 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-bold text-sm"
         >
           <RefreshCw className="w-4 h-4" />
-          {distribution ? 'Reiniciar' : 'Distribuir'}
+          {distribution ? 'Distribuir' : 'Distribuir'}
         </button>
       </div>
 
@@ -120,7 +129,50 @@ export function DistributionManager({
       )}
 
       {distribution && (
-        <div className="space-y-4">
+        <div className="space-y-1.5">
+          {/* TOTAL Row */}
+          <div className="bg-flu-maroon rounded-2xl shadow-md border border-flu-maroon/20 overflow-hidden">
+            <button 
+              onClick={() => setSelectedEmployeeId(selectedEmployeeId === 'total' ? null : 'total')}
+              className="w-full p-3 flex justify-between items-center hover:bg-flu-maroon/90 transition-colors text-left"
+            >
+              <div>
+                <h3 className="font-black text-base text-white">TOTAL</h3>
+                <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">Geral</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[9px] font-black text-white/60 uppercase">Total Distribuído</p>
+                <span className="text-base font-black text-white">{totalDistributedCount}</span>
+              </div>
+            </button>
+
+            {selectedEmployeeId === 'total' && (
+              <div className="p-3 border-t border-white/10 space-y-1.5 bg-white/5">
+                {products.map((product) => {
+                  const distributed = totalDistributedByProduct[product.id] || 0;
+                  const remainder = product.quantity - distributed;
+                  return (
+                    <div key={product.id} className="flex items-center justify-between gap-4 bg-white/10 py-1.5 px-3 rounded-xl border border-white/10">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-white truncate">{product.name}</p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <p className="text-[8px] font-black text-white/40 uppercase">Dist.</p>
+                          <p className="text-xs font-black text-white">{distributed}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[8px] font-black text-white/40 uppercase">Sobra</p>
+                          <p className={cn("text-xs font-black", remainder < 0 ? "text-red-300" : "text-green-300")}>{remainder}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {employees.map((employee) => {
             const empData = distribution[employee.id];
             if (!empData) return null;
@@ -153,12 +205,29 @@ export function DistributionManager({
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-[9px] font-black text-gray-400 uppercase">Qtd</span>
-                          <input
-                            type="number"
-                            value={item.quantity}
-                            onChange={(e) => handleQuantityChange(employee.id, item.product.id, e.target.value)}
-                            className="w-14 px-1 py-0.5 text-center font-bold bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-flu-maroon outline-none text-sm"
-                          />
+                          <div className="flex items-center bg-gray-50 rounded-lg border border-gray-200 overflow-hidden pr-1">
+                            <input
+                              type="number"
+                              value={item.quantity}
+                              onFocus={(e) => e.target.select()}
+                              onChange={(e) => handleQuantityChange(employee.id, item.product.id, e.target.value)}
+                              className="w-12 py-1 text-center font-black bg-transparent outline-none text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            />
+                            <div className="flex flex-col border-l border-gray-200">
+                              <button 
+                                onClick={() => handleQuantityChange(employee.id, item.product.id, item.quantity + 1)}
+                                className="px-1 text-gray-400 hover:text-flu-maroon transition-colors border-b border-gray-100"
+                              >
+                                <ChevronUp className="w-2.5 h-2.5" />
+                              </button>
+                              <button 
+                                onClick={() => handleQuantityChange(employee.id, item.product.id, item.quantity - 1)}
+                                className="px-1 text-gray-400 hover:text-flu-maroon transition-colors"
+                              >
+                                <ChevronDown className="w-2.5 h-2.5" />
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -170,14 +239,6 @@ export function DistributionManager({
               </div>
             );
           })}
-        </div>
-      )}
-
-      {distribution && (
-        <div className="bg-flu-maroon/5 p-4 rounded-lg text-center">
-          <p className="text-flu-maroon font-medium">
-            Total distribuído: <span className="font-bold">{totalDistributed}</span> itens entre {employees.length} funcionários.
-          </p>
         </div>
       )}
     </div>

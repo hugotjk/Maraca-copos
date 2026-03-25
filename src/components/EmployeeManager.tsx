@@ -67,10 +67,10 @@ export function EmployeeManager({ employees, setEmployees }: EmployeeManagerProp
             setEditingId(null);
             setFormData({ name: '' });
           }}
-          className="bg-flu-maroon hover:bg-opacity-90 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-bold text-sm"
+          className="bg-flu-maroon hover:bg-opacity-90 text-white px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors text-[10px] font-black min-w-[100px]"
         >
-          <Plus className="w-4 h-4" />
-          {isAdding ? 'Cancelar' : 'Novo Funcionário'}
+          <Plus className="w-3 h-3" />
+          {isAdding ? 'Cancelar' : 'Novo'}
         </button>
       </div>
 

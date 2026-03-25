@@ -7,8 +7,9 @@ export interface Product {
   id: string;
   name: string;
   description: string;
-  pdv: number;
-  commission: number;
+  price: number;
+  commissionV: number;
+  commissionG: number;
   quantity: number;
 }
 
