@@ -17,44 +17,67 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
   const [globalReportType, setGlobalReportType] = useState<'distribution' | 'closing'>('distribution');
   const reportRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  const [isSharing, setIsSharing] = useState<string | null>(null);
+
   const shareOnWhatsApp = async (employeeId: string) => {
     const element = reportRefs.current[employeeId];
-    if (!element) return;
+    if (!element || isSharing) return;
 
+    setIsSharing(employeeId);
     try {
+      // Ensure the element is visible and rendered
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       const canvas = await html2canvas(element, {
-        scale: 3,
+        scale: 2,
         backgroundColor: '#ffffff',
         logging: false,
         useCORS: true,
+        allowTaint: true,
+        imageTimeout: 15000,
       });
       
-      canvas.toBlob(async (blob) => {
-        if (!blob) return;
-        const fileName = `relatorio_${employeeId}.jpg`;
-        const file = new File([blob], fileName, { type: 'image/jpeg' });
-        
-        if (navigator.share && navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: globalReportType === 'distribution' ? 'Relatório de Distribuição' : 'Fechamento de Vendas',
-            });
-          } catch (err) {
-            const link = document.createElement('a');
-            link.download = fileName;
-            link.href = URL.createObjectURL(blob);
-            link.click();
-          }
-        } else {
-          const link = document.createElement('a');
-          link.download = fileName;
-          link.href = URL.createObjectURL(blob);
-          link.click();
+      const blob = await new Promise<Blob | null>((resolve) => 
+        canvas.toBlob((b) => resolve(b), 'image/jpeg', 0.9)
+      );
+
+      if (!blob) throw new Error('Failed to create blob');
+
+      const fileName = `relatorio_${employeeId}.jpg`;
+      const file = new File([blob], fileName, { type: 'image/jpeg' });
+      
+      // 1. Try Native Share (Best for Mobile)
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'Relatório Maracana Flu',
+          });
+          setIsSharing(null);
+          return;
+        } catch (err) {
+          console.warn('Native share failed:', err);
         }
-      }, 'image/jpeg', 0.95);
+      }
+
+      // 2. Fallback: Download the image
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // 3. Open WhatsApp with a message
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent('Segue o relatório baixado.')}`;
+      window.open(whatsappUrl, '_blank');
+      
+      setIsSharing(null);
     } catch (error) {
-      console.error('Error generating image:', error);
+      console.error('Error in shareOnWhatsApp:', error);
+      alert('Erro ao gerar imagem. Tente novamente.');
+      setIsSharing(null);
     }
   };
 
@@ -403,10 +426,14 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
                   <div className="flex pt-2">
                     <button
                       onClick={() => shareOnWhatsApp(employee.id)}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 font-bold text-sm"
+                      disabled={isSharing !== null}
+                      className={cn(
+                        "w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 font-bold text-sm",
+                        isSharing === employee.id && "opacity-70 cursor-not-allowed"
+                      )}
                     >
-                      <MessageCircle className="w-4 h-4" />
-                      WhatsApp
+                      <MessageCircle className={cn("w-4 h-4", isSharing === employee.id && "animate-pulse")} />
+                      {isSharing === employee.id ? 'Gerando...' : 'WhatsApp'}
                     </button>
                   </div>
                 </div>
@@ -495,10 +522,14 @@ export function ReportViewer({ employees, distribution, globalCashFloat }: Repor
                 <div className="flex">
                   <button
                     onClick={() => shareOnWhatsApp('gestor')}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 font-bold text-sm"
+                    disabled={isSharing !== null}
+                    className={cn(
+                      "w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 font-bold text-sm",
+                      isSharing === 'gestor' && "opacity-70 cursor-not-allowed"
+                    )}
                   >
-                    <MessageCircle className="w-4 h-4" />
-                    WhatsApp
+                    <MessageCircle className={cn("w-4 h-4", isSharing === 'gestor' && "animate-pulse")} />
+                    {isSharing === 'gestor' ? 'Gerando...' : 'WhatsApp'}
                   </button>
                 </div>
               </div>
