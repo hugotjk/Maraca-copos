@@ -11,11 +11,12 @@ import { EmployeeManager } from './components/EmployeeManager';
 import { DistributionManager } from './components/DistributionManager';
 import { ReturnManager } from './components/ReturnManager';
 import { ReportViewer } from './components/ReportViewer';
-import { LayoutDashboard, Package, Users, Share2, FileText, RotateCcw } from 'lucide-react';
+import { LayoutDashboard, Package, Users, Share2, FileText, RotateCcw, Calculator } from 'lucide-react';
 import { cn } from './lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import { ClosingManager } from './components/ClosingManager';
 
-type Tab = 'home' | 'stock' | 'employees' | 'distribution' | 'returns' | 'reports';
+type Tab = 'home' | 'stock' | 'employees' | 'distribution' | 'returns' | 'reports' | 'closing';
 
 const INITIAL_PRODUCTS: Product[] = [
   { id: '1', name: 'COPO Jogo', description: 'Jogo', price: 20, commissionV: 1.8, commissionG: 1.2, quantity: 0 },
@@ -56,6 +57,7 @@ export default function App() {
     { id: 'distribution', label: 'DISTRIBUIÇÃO', icon: Share2 },
     { id: 'returns', label: 'DEVOLUÇÃO', icon: RotateCcw },
     { id: 'reports', label: 'RELATÓRIOS', icon: FileText },
+    { id: 'closing', label: 'FECHAMENTO', icon: Calculator },
   ];
 
   return (
@@ -153,6 +155,12 @@ export default function App() {
                 <ReportViewer 
                   employees={employees}
                   distribution={distribution} 
+                  globalCashFloat={globalCashFloat}
+                />
+              )}
+              {activeTab === 'closing' && (
+                <ClosingManager 
+                  distribution={distribution}
                   globalCashFloat={globalCashFloat}
                 />
               )}

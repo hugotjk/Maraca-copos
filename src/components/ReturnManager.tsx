@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { DistributionResult, Employee } from '../types';
 import { RotateCcw, DollarSign, CreditCard, MinusCircle } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { cn, formatCurrency } from '../lib/utils';
 
 interface ReturnManagerProps {
   employees: Employee[];
@@ -63,7 +63,8 @@ export function ReturnManager({ employees, distribution, setDistribution, global
     
     const totals = Object.keys(distribution).reduce((acc, empId) => {
       const empData = distribution[empId];
-      acc.cash += empData.cashReceived;
+      // Subtract float from cash to get actual sales cash
+      acc.cash += (empData.cashReceived - empData.cashFloat);
       acc.card += empData.cardReceived;
       acc.sangria += empData.sangria;
       acc.divergence += calculateDivergence(empId);
@@ -120,7 +121,7 @@ export function ReturnManager({ employees, distribution, setDistribution, global
             <div className="text-right">
               <p className="text-[9px] font-black text-white/60 uppercase">Total Vendido</p>
               <span className="text-base font-black text-white">
-                R$ {financialTotals.totalSales.toFixed(2)}
+                {formatCurrency(financialTotals.totalSales)}
               </span>
             </div>
           </button>
@@ -129,12 +130,12 @@ export function ReturnManager({ employees, distribution, setDistribution, global
             <div className="p-3 border-t border-white/10 space-y-3 bg-white/5">
               <div className="grid grid-cols-2 gap-2">
                 <div className="bg-white/10 p-2 rounded-xl border border-white/10">
-                  <p className="text-[8px] font-black text-white/40 uppercase">Dinheiro Recebido</p>
-                  <p className="text-sm font-black text-white">R$ {financialTotals.cash.toFixed(2)}</p>
+                  <p className="text-[8px] font-black text-white/40 uppercase">Venda em Dinheiro</p>
+                  <p className="text-sm font-black text-white">{formatCurrency(financialTotals.cash)}</p>
                 </div>
                 <div className="bg-white/10 p-2 rounded-xl border border-white/10">
                   <p className="text-[8px] font-black text-white/40 uppercase">Cartão Recebido</p>
-                  <p className="text-sm font-black text-white">R$ {financialTotals.card.toFixed(2)}</p>
+                  <p className="text-sm font-black text-white">{formatCurrency(financialTotals.card)}</p>
                 </div>
               </div>
 
@@ -148,7 +149,7 @@ export function ReturnManager({ employees, distribution, setDistribution, global
                         <p className="text-[9px] text-white/40 font-bold uppercase">Vendidos: {item.sold}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-black text-white">R$ {item.total.toFixed(2)}</p>
+                        <p className="text-sm font-black text-white">{formatCurrency(item.total)}</p>
                       </div>
                     </div>
                   ))}
@@ -162,12 +163,12 @@ export function ReturnManager({ employees, distribution, setDistribution, global
                     "text-sm font-black",
                     financialTotals.divergence < 0 ? "text-red-400" : financialTotals.divergence > 0 ? "text-green-400" : "text-white"
                   )}>
-                    R$ {financialTotals.divergence.toFixed(2)}
+                    {formatCurrency(financialTotals.divergence)}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-[8px] font-black text-white/40 uppercase">Sangria Total</p>
-                  <p className="text-sm font-black text-white">R$ {financialTotals.sangria.toFixed(2)}</p>
+                  <p className="text-sm font-black text-white">{formatCurrency(financialTotals.sangria)}</p>
                 </div>
               </div>
             </div>
@@ -210,7 +211,7 @@ export function ReturnManager({ employees, distribution, setDistribution, global
                     "text-base font-black",
                     divergence < 0 ? "text-red-500" : divergence > 0 ? "text-green-500" : "text-gray-800"
                   )}>
-                    R$ {divergence.toFixed(2)}
+                    {formatCurrency(divergence)}
                   </span>
                 </div>
               </button>
@@ -292,7 +293,7 @@ export function ReturnManager({ employees, distribution, setDistribution, global
                   {/* Summary Section */}
                   <div className="space-y-2">
                     <div className="bg-gray-100/50 p-2 rounded-xl flex justify-between text-[10px]">
-                      <span className="text-gray-500 font-bold uppercase">Fundo de Caixa: R$ {empData.cashFloat.toFixed(2)}</span>
+                      <span className="text-gray-500 font-bold uppercase">Fundo de Caixa: {formatCurrency(empData.cashFloat)}</span>
                       <span className="text-gray-500 font-bold uppercase">Vendas: {totalSold} itens</span>
                     </div>
                     
@@ -304,7 +305,7 @@ export function ReturnManager({ employees, distribution, setDistribution, global
                           "w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl font-black text-base flex items-center",
                           divergence < 0 ? "text-red-600" : divergence > 0 ? "text-green-600" : "text-gray-800"
                         )}>
-                          {divergence.toFixed(2)}
+                          {formatCurrency(divergence)}
                         </div>
                       </div>
                     </div>
