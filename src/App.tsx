@@ -5,18 +5,19 @@
 
 import { useState } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { Product, Employee, DistributionResult } from './types';
+import { Product, Employee, DistributionResult, Transaction } from './types';
 import { StockManager } from './components/StockManager';
 import { EmployeeManager } from './components/EmployeeManager';
 import { DistributionManager } from './components/DistributionManager';
 import { ReturnManager } from './components/ReturnManager';
 import { ReportViewer } from './components/ReportViewer';
-import { LayoutDashboard, Package, Users, Share2, FileText, RotateCcw, Calculator } from 'lucide-react';
+import { HistoryManager } from './components/HistoryManager';
+import { LayoutDashboard, Package, Users, Share2, FileText, RotateCcw, Calculator, History } from 'lucide-react';
 import { cn } from './lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { ClosingManager } from './components/ClosingManager';
 
-type Tab = 'home' | 'stock' | 'employees' | 'distribution' | 'returns' | 'reports' | 'closing';
+type Tab = 'home' | 'stock' | 'employees' | 'distribution' | 'returns' | 'reports' | 'closing' | 'history';
 
 const INITIAL_PRODUCTS: Product[] = [
   { id: '1', name: 'COPO Jogo', description: 'Jogo', price: 20, commissionV: 1.8, commissionG: 1.2, quantity: 0 },
@@ -49,7 +50,17 @@ export default function App() {
   const [employees, setEmployees] = useLocalStorage<Employee[]>('stockflow_employees', []);
   const [distribution, setDistribution] = useLocalStorage<DistributionResult | null>('stockflow_distribution', null);
   const [globalCashFloat, setGlobalCashFloat] = useLocalStorage<number>('stockflow_global_cash_float', 0);
+  const [transactions, setTransactions] = useLocalStorage<Transaction[]>('stockflow_transactions', []);
   const [activeTab, setActiveTab] = useState<Tab>('home');
+
+  const addTransaction = (transaction: Omit<Transaction, 'id' | 'timestamp'>) => {
+    const newTransaction: Transaction = {
+      ...transaction,
+      id: crypto.randomUUID(),
+      timestamp: new Date().toISOString(),
+    };
+    setTransactions(prev => [newTransaction, ...prev].slice(0, 500)); // Keep last 500
+  };
 
   const menuItems = [
     { id: 'stock', label: 'ESTOQUE', icon: Package },
@@ -57,6 +68,7 @@ export default function App() {
     { id: 'distribution', label: 'DISTRIBUIÇÃO', icon: Share2 },
     { id: 'returns', label: 'DEVOLUÇÃO', icon: RotateCcw },
     { id: 'reports', label: 'RELATÓRIOS', icon: FileText },
+    { id: 'history', label: 'HISTÓRICO', icon: History },
     { id: 'closing', label: 'FECHAMENTO', icon: Calculator },
   ];
 
@@ -149,6 +161,7 @@ export default function App() {
                   distribution={distribution}
                   setDistribution={setDistribution}
                   globalCashFloat={globalCashFloat}
+                  addTransaction={addTransaction}
                 />
               )}
               {activeTab === 'reports' && (
@@ -158,10 +171,17 @@ export default function App() {
                   globalCashFloat={globalCashFloat}
                 />
               )}
+              {activeTab === 'history' && (
+                <HistoryManager 
+                  transactions={transactions}
+                  setTransactions={setTransactions}
+                />
+              )}
               {activeTab === 'closing' && (
                 <ClosingManager 
                   distribution={distribution}
                   globalCashFloat={globalCashFloat}
+                  addTransaction={addTransaction}
                 />
               )}
             </motion.div>

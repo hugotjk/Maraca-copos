@@ -35,3 +35,13 @@ export interface DistributionResult {
     sangria: number;
   };
 }
+
+export interface Transaction {
+  id: string;
+  timestamp: string;
+  type: 'venda' | 'devolucao' | 'despesa' | 'sangria' | 'fechamento';
+  description: string;
+  amount: number;
+  employeeName?: string;
+  details?: string;
+}

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { DistributionResult, Employee } from '../types';
-import { RotateCcw, DollarSign, CreditCard, MinusCircle } from 'lucide-react';
+import { DistributionResult, Employee, Transaction } from '../types';
+import { RotateCcw, DollarSign, CreditCard, MinusCircle, Save } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
 
 interface ReturnManagerProps {
@@ -8,9 +8,10 @@ interface ReturnManagerProps {
   distribution: DistributionResult | null;
   setDistribution: (dist: DistributionResult | null) => void;
   globalCashFloat: number;
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'timestamp'>) => void;
 }
 
-export function ReturnManager({ employees, distribution, setDistribution, globalCashFloat }: ReturnManagerProps) {
+export function ReturnManager({ employees, distribution, setDistribution, globalCashFloat, addTransaction }: ReturnManagerProps) {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
 
   const handleReturnChangeByDescription = (employeeId: string, description: string, value: string) => {
@@ -54,6 +55,48 @@ export function ReturnManager({ employees, distribution, setDistribution, global
     
     const actualReceived = empData.cashReceived + empData.cardReceived + empData.sangria - empData.cashFloat;
     return actualReceived - expectedSales;
+  };
+
+  const handleSaveTransaction = (employeeId: string) => {
+    if (!distribution) return;
+    const empData = distribution[employeeId];
+    const expectedSales = empData.items.reduce((acc, item) => {
+      const sold = item.quantity - item.returned;
+      return acc + (sold * item.product.price);
+    }, 0);
+    const totalReturnedQty = empData.items.reduce((acc, item) => acc + item.returned, 0);
+    const totalReturnedValue = empData.items.reduce((acc, item) => acc + (item.returned * item.product.price), 0);
+
+    if (expectedSales > 0) {
+      addTransaction({
+        type: 'venda',
+        description: `Venda - ${empData.employee.name}`,
+        amount: expectedSales,
+        employeeName: empData.employee.name,
+        details: `Venda total de ${empData.items.reduce((acc, i) => acc + (i.quantity - i.returned), 0)} itens.`
+      });
+    }
+
+    if (totalReturnedQty > 0) {
+      addTransaction({
+        type: 'devolucao',
+        description: `Devolução - ${empData.employee.name}`,
+        amount: totalReturnedValue,
+        employeeName: empData.employee.name,
+        details: `${totalReturnedQty} itens devolvidos.`
+      });
+    }
+
+    if (empData.sangria > 0) {
+      addTransaction({
+        type: 'sangria',
+        description: `Sangria - ${empData.employee.name}`,
+        amount: empData.sangria,
+        employeeName: empData.employee.name
+      });
+    }
+
+    alert('Transações registradas no histórico com sucesso!');
   };
 
   const financialTotals = useMemo(() => {
@@ -297,17 +340,26 @@ export function ReturnManager({ employees, distribution, setDistribution, global
                       <span className="text-gray-500 font-bold uppercase">Vendas: {totalSold} itens</span>
                     </div>
                     
-                    <div className="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-1">
-                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Divergência (R$)</label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">R$</span>
-                        <div className={cn(
-                          "w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl font-black text-base flex items-center",
-                          divergence < 0 ? "text-red-600" : divergence > 0 ? "text-green-600" : "text-gray-800"
-                        )}>
-                          {formatCurrency(divergence)}
+                    <div className="flex gap-2">
+                      <div className="flex-1 bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-1">
+                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Divergência (R$)</label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">R$</span>
+                          <div className={cn(
+                            "w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl font-black text-base flex items-center",
+                            divergence < 0 ? "text-red-600" : divergence > 0 ? "text-green-600" : "text-gray-800"
+                          )}>
+                            {formatCurrency(divergence)}
+                          </div>
                         </div>
                       </div>
+                      <button
+                        onClick={() => handleSaveTransaction(employee.id)}
+                        className="bg-flu-green hover:bg-opacity-90 text-white px-4 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-sm transition-all active:scale-95"
+                      >
+                        <Save className="w-5 h-5" />
+                        <span className="text-[8px] font-black uppercase">Salvar</span>
+                      </button>
                     </div>
                   </div>
                 </div>

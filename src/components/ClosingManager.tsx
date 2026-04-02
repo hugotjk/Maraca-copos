@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { Calculator, TrendingUp, CreditCard, Banknote, Receipt, ArrowRight, Info, Users, FileDown } from 'lucide-react';
+import { Calculator, TrendingUp, CreditCard, Banknote, Receipt, ArrowRight, Info, Users, FileDown, Save } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
-import { DistributionResult } from '../types';
+import { DistributionResult, Transaction } from '../types';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -17,6 +17,7 @@ interface OperationData {
 interface ClosingManagerProps {
   distribution: DistributionResult | null;
   globalCashFloat: number;
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'timestamp'>) => void;
 }
 
 const INITIAL_OPERATIONS: OperationData[] = [
@@ -25,7 +26,7 @@ const INITIAL_OPERATIONS: OperationData[] = [
   { id: 'leste_sup', name: 'Leste Sup.', cash: 0, card: 0, employeeCount: 1 },
 ];
 
-export function ClosingManager({ distribution, globalCashFloat }: ClosingManagerProps) {
+export function ClosingManager({ distribution, globalCashFloat, addTransaction }: ClosingManagerProps) {
   const [operations, setOperations] = useLocalStorage<OperationData[]>('stockflow_closing_data_v3', INITIAL_OPERATIONS);
   const [showClearConfirm, setShowClearConfirm] = React.useState(false);
 
@@ -100,6 +101,39 @@ export function ClosingManager({ distribution, globalCashFloat }: ClosingManager
   };
 
   const totals = calculateTotals();
+
+  const handleSaveClosing = () => {
+    // Record total sales
+    addTransaction({
+      type: 'fechamento',
+      description: 'Fechamento de Caixa Geral',
+      amount: totals.totalBalance,
+      details: `Venda Total: ${formatCurrency(totals.totalSum)} | Despesas: ${formatCurrency(totals.totalExpenses)}`
+    });
+
+    // Record individual expenses
+    operations.forEach(op => {
+      const expenses = calculateOpExpenses(op);
+      if (expenses.total > 0) {
+        addTransaction({
+          type: 'despesa',
+          description: `Despesas - ${op.name}`,
+          amount: expenses.total,
+          details: `V (5%/F): ${formatCurrency(expenses.despesaV)} | G (4%): ${formatCurrency(expenses.despesaG)}`
+        });
+      }
+    });
+
+    if (coposData.commission > 0) {
+      addTransaction({
+        type: 'despesa',
+        description: 'Despesas - COPOS (Comissão)',
+        amount: coposData.commission
+      });
+    }
+
+    alert('Fechamento registrado no histórico com sucesso!');
+  };
 
   const generatePDF = () => {
     const doc = new jsPDF();
@@ -441,6 +475,14 @@ export function ClosingManager({ distribution, globalCashFloat }: ClosingManager
         </div>
       ) : (
         <div className="space-y-2">
+          <button 
+            onClick={handleSaveClosing}
+            className="w-full py-4 bg-flu-green text-white rounded-2xl flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+          >
+            <Save className="w-4 h-4" />
+            Salvar no Histórico
+          </button>
+
           <button 
             onClick={generatePDF}
             className="w-full py-4 bg-flu-maroon text-white rounded-2xl flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all"
