@@ -44,4 +44,11 @@ export interface Transaction {
   amount: number;
   employeeName?: string;
   details?: string;
+  items?: {
+    name: string;
+    distributed: number;
+    returned: number;
+    sold: number;
+    price: number;
+  }[];
 }

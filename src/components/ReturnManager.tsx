@@ -67,13 +67,22 @@ export function ReturnManager({ employees, distribution, setDistribution, global
     const totalReturnedQty = empData.items.reduce((acc, item) => acc + item.returned, 0);
     const totalReturnedValue = empData.items.reduce((acc, item) => acc + (item.returned * item.product.price), 0);
 
+    const itemsList = empData.items.map(i => ({
+      name: i.product.name,
+      distributed: i.quantity,
+      returned: i.returned,
+      sold: i.quantity - i.returned,
+      price: i.product.price
+    }));
+
     if (expectedSales > 0) {
       addTransaction({
         type: 'venda',
         description: `Venda - ${empData.employee.name}`,
         amount: expectedSales,
         employeeName: empData.employee.name,
-        details: `Venda total de ${empData.items.reduce((acc, i) => acc + (i.quantity - i.returned), 0)} itens.`
+        details: `Venda total de ${empData.items.reduce((acc, i) => acc + (i.quantity - i.returned), 0)} itens.`,
+        items: itemsList
       });
     }
 
@@ -83,7 +92,8 @@ export function ReturnManager({ employees, distribution, setDistribution, global
         description: `Devolução - ${empData.employee.name}`,
         amount: totalReturnedValue,
         employeeName: empData.employee.name,
-        details: `${totalReturnedQty} itens devolvidos.`
+        details: `${totalReturnedQty} itens devolvidos.`,
+        items: itemsList.filter(i => i.returned > 0)
       });
     }
 
