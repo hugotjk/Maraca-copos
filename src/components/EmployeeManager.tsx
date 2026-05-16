@@ -110,7 +110,7 @@ export function EmployeeManager({ employees, setEmployees }: EmployeeManagerProp
             axis="y" 
             values={employees} 
             onReorder={(newOrder) => setEmployees(updateSectors(newOrder))}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"
+            className="flex flex-col gap-3"
           >
             {employees.map(employee => (
               <EmployeeCard 

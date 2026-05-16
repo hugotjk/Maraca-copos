@@ -190,7 +190,7 @@ export function DistributionManager({
       )}
 
       {distribution && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="flex flex-col gap-3">
           {/* TOTAL Row */}
           <div className="bg-flu-maroon rounded-2xl shadow-md border border-flu-maroon/20 overflow-hidden h-fit">
             <button 
@@ -215,7 +215,7 @@ export function DistributionManager({
                   return (
                     <div key={product.id} className="flex items-center justify-between gap-4 bg-white/10 py-1.5 px-3 rounded-xl border border-white/10">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-white truncate">{product.name}</p>
+                        <p className="text-sm font-bold text-white whitespace-normal">{product.name}</p>
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-right">
@@ -262,7 +262,7 @@ export function DistributionManager({
                     {items.map((item, idx) => (
                       <div key={idx} className="flex items-center justify-between gap-4 bg-white py-1.5 px-3 rounded-xl border border-gray-100">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-gray-700 truncate">{item.product.name}</p>
+                          <p className="text-sm font-bold text-gray-700 whitespace-normal">{item.product.name}</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-[9px] font-black text-gray-400 uppercase">Qtd</span>

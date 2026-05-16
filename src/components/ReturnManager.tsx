@@ -160,7 +160,7 @@ export function ReturnManager({ employees, distribution, setDistribution, global
         Devolução e Acerto
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="flex flex-col gap-3">
         {/* TOTAL Row */}
         <div className="bg-flu-maroon rounded-2xl shadow-md border border-flu-maroon/20 overflow-hidden h-fit">
           <button 
@@ -198,7 +198,7 @@ export function ReturnManager({ employees, distribution, setDistribution, global
                   {financialTotals.itemSummary.map((item, idx) => (
                     <div key={idx} className="flex items-center justify-between gap-4 bg-white/5 py-1.5 px-3 rounded-xl border border-white/5">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-white truncate">{item.description}</p>
+                        <p className="text-sm font-bold text-white whitespace-normal">{item.description}</p>
                         <p className="text-[9px] text-white/40 font-bold uppercase">Vendidos: {item.sold}</p>
                       </div>
                       <div className="text-right">
@@ -277,7 +277,7 @@ export function ReturnManager({ employees, distribution, setDistribution, global
                     {groupedItems.map((group, idx) => (
                       <div key={idx} className="flex items-center justify-between gap-4 bg-white py-1.5 px-3 rounded-xl border border-gray-100">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-gray-700 truncate">{group.description}</p>
+                          <p className="text-sm font-bold text-gray-700 whitespace-normal">{group.description}</p>
                           <p className="text-[9px] text-gray-400 font-bold uppercase">Saiu: {group.quantity}</p>
                         </div>
                         <div className="flex items-center gap-2">
