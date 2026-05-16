@@ -26,12 +26,22 @@ export function DistributionManager({
     if (employees.length === 0) return;
 
     const result: DistributionResult = {};
+    const promoEmployees = employees.filter(e => e.sector === 'Promoção');
+    const regularEmployees = employees.filter(e => e.sector !== 'Promoção');
     
+    // Check if Promo cup is in stock
+    const promoProduct = products.find(p => {
+      const name = (p.name || '').toLowerCase();
+      const desc = (p.description || '').toLowerCase();
+      return desc.includes('promo 2/20') || name.includes('promo 2/20');
+    });
+    const isPromoInStock = promoProduct && promoProduct.quantity > 0;
+
     employees.forEach(emp => {
       result[emp.id] = {
         employee: emp,
         items: [],
-        cashFloat: globalCashFloat,
+        cashFloat: Number(globalCashFloat) || 0,
         cashReceived: 0,
         cardReceived: 0,
         sangria: 0
@@ -39,19 +49,70 @@ export function DistributionManager({
     });
 
     products.forEach(product => {
-      const perEmployee = Math.floor(product.quantity / employees.length);
+      const name = (product.name || '').toLowerCase();
+      const desc = (product.description || '').toLowerCase();
+      
+      const isPromoCup = desc.includes('promo 2/20') || name.includes('promo 2/20');
+      const isCachecol = desc.includes('cachecol') || name.includes('cachecol');
+      const isCordao = desc.includes('cordao') || desc.includes('cordão') || name.includes('cordao') || name.includes('cordão');
+      const isCachecolOrCordao = isCachecol || isCordao;
 
-      employees.forEach((emp) => {
-        const qty = perEmployee;
+      if (isPromoCup) {
+        // ONLY Promoção gets the Promo Cup
+        if (promoEmployees.length > 0) {
+          const perEmployee = Math.floor(product.quantity / promoEmployees.length);
+          const maxDist = product.maxToDistribute || 999999;
+          const qty = Math.min(perEmployee, maxDist);
 
-        if (qty > 0) {
-          result[emp.id].items.push({
-            product,
-            quantity: qty,
-            returned: 0
-          });
+          if (qty > 0) {
+            promoEmployees.forEach(emp => {
+              result[emp.id].items.push({
+                product,
+                quantity: qty,
+                returned: 0
+              });
+            });
+          }
         }
-      });
+      } else if (isCachecolOrCordao) {
+        // Distribute to all (regular + promo if cup in stock)
+        const eligibleEmployees = isPromoInStock 
+          ? employees 
+          : regularEmployees;
+        
+        if (eligibleEmployees.length > 0) {
+          const perEmployee = Math.floor(product.quantity / eligibleEmployees.length);
+          const maxDist = product.maxToDistribute || 999999;
+          const qty = Math.min(perEmployee, maxDist);
+          
+          if (qty > 0) {
+            eligibleEmployees.forEach(emp => {
+              result[emp.id].items.push({
+                product,
+                quantity: qty,
+                returned: 0
+              });
+            });
+          }
+        }
+      } else {
+        // Other products ONLY for regular employees
+        if (regularEmployees.length > 0) {
+          const perEmployee = Math.floor(product.quantity / regularEmployees.length);
+          const maxDist = product.maxToDistribute || 999999;
+          const qty = Math.min(perEmployee, maxDist);
+          
+          if (qty > 0) {
+            regularEmployees.forEach(emp => {
+              result[emp.id].items.push({
+                product,
+                quantity: qty,
+                returned: 0
+              });
+            });
+          }
+        }
+      }
     });
 
     setDistribution(result);
@@ -129,9 +190,9 @@ export function DistributionManager({
       )}
 
       {distribution && (
-        <div className="space-y-1.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {/* TOTAL Row */}
-          <div className="bg-flu-maroon rounded-2xl shadow-md border border-flu-maroon/20 overflow-hidden">
+          <div className="bg-flu-maroon rounded-2xl shadow-md border border-flu-maroon/20 overflow-hidden h-fit">
             <button 
               onClick={() => setSelectedEmployeeId(selectedEmployeeId === 'total' ? null : 'total')}
               className="w-full p-3 flex justify-between items-center hover:bg-flu-maroon/90 transition-colors text-left"
@@ -147,7 +208,7 @@ export function DistributionManager({
             </button>
 
             {selectedEmployeeId === 'total' && (
-              <div className="p-3 border-t border-white/10 space-y-1.5 bg-white/5">
+              <div className="p-3 border-t border-white/10 space-y-1.5 bg-white/5 max-h-[300px] overflow-y-auto">
                 {products.map((product) => {
                   const distributed = totalDistributedByProduct[product.id] || 0;
                   const remainder = product.quantity - distributed;
@@ -181,7 +242,7 @@ export function DistributionManager({
             const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
 
             return (
-              <div key={employee.id} className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+              <div key={employee.id} className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden h-fit">
                 <button 
                   onClick={() => setSelectedEmployeeId(isSelected ? null : employee.id)}
                   className="w-full p-3 flex justify-between items-center hover:bg-gray-50 transition-colors text-left"
@@ -197,7 +258,7 @@ export function DistributionManager({
                 </button>
 
                 {isSelected && (
-                  <div className="p-3 border-t border-gray-100 space-y-1.5 bg-gray-50/50">
+                  <div className="p-3 border-t border-gray-100 space-y-1.5 bg-gray-50/50 max-h-[300px] overflow-y-auto">
                     {items.map((item, idx) => (
                       <div key={idx} className="flex items-center justify-between gap-4 bg-white py-1.5 px-3 rounded-xl border border-gray-100">
                         <div className="flex-1 min-w-0">

@@ -120,27 +120,27 @@ export function HistoryManager({ transactions, setTransactions }: HistoryManager
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {transactions.length === 0 ? (
-          <div className="bg-white p-12 text-center text-gray-500 italic rounded-3xl border-2 border-dashed border-gray-200">
+          <div className="col-span-full bg-white p-12 text-center text-gray-500 italic rounded-3xl border-2 border-dashed border-gray-200">
             Nenhuma transação registrada.
           </div>
         ) : (
           transactions.map((t) => (
-            <div key={t.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
-              <div className="bg-gray-50 p-3 rounded-xl">
+            <div key={t.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 h-fit">
+              <div className="bg-gray-50 p-3 rounded-xl flex-shrink-0">
                 {getIcon(t.type)}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-start">
-                  <div>
+                <div className="flex justify-between items-start gap-2">
+                  <div className="min-w-0 flex-1">
                     <h4 className="font-black text-gray-800 text-sm truncate">{t.description}</h4>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate">
                       {formatDate(t.timestamp)} {t.employeeName && `• ${t.employeeName}`}
                     </p>
                   </div>
                   <span className={cn(
-                    "text-sm font-black",
+                    "text-sm font-black flex-shrink-0",
                     t.type === 'venda' || t.type === 'fechamento' ? "text-green-600" : 
                     t.type === 'despesa' || t.type === 'sangria' ? "text-red-600" : "text-blue-600"
                   )}>
@@ -148,7 +148,7 @@ export function HistoryManager({ transactions, setTransactions }: HistoryManager
                   </span>
                 </div>
                 {t.details && (
-                  <p className="text-[10px] text-gray-500 mt-1 italic">{t.details}</p>
+                  <p className="text-[10px] text-gray-500 mt-1 italic truncate">{t.details}</p>
                 )}
               </div>
             </div>

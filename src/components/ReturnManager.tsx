@@ -160,9 +160,9 @@ export function ReturnManager({ employees, distribution, setDistribution, global
         Devolução e Acerto
       </h2>
 
-      <div className="space-y-1.5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {/* TOTAL Row */}
-        <div className="bg-flu-maroon rounded-2xl shadow-md border border-flu-maroon/20 overflow-hidden">
+        <div className="bg-flu-maroon rounded-2xl shadow-md border border-flu-maroon/20 overflow-hidden h-fit">
           <button 
             onClick={() => setSelectedEmployeeId(selectedEmployeeId === 'total' ? null : 'total')}
             className="w-full p-3 flex justify-between items-center hover:bg-flu-maroon/90 transition-colors text-left"
@@ -180,7 +180,7 @@ export function ReturnManager({ employees, distribution, setDistribution, global
           </button>
 
           {selectedEmployeeId === 'total' && (
-            <div className="p-3 border-t border-white/10 space-y-3 bg-white/5">
+            <div className="p-3 border-t border-white/10 space-y-3 bg-white/5 max-h-[400px] overflow-y-auto">
               <div className="grid grid-cols-2 gap-2">
                 <div className="bg-white/10 p-2 rounded-xl border border-white/10">
                   <p className="text-[8px] font-black text-white/40 uppercase">Venda em Dinheiro</p>
@@ -249,7 +249,7 @@ export function ReturnManager({ employees, distribution, setDistribution, global
           })();
 
           return (
-            <div key={employee.id} className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+            <div key={employee.id} className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden h-fit">
               <button 
                 onClick={() => setSelectedEmployeeId(isSelected ? null : employee.id)}
                 className="w-full p-3 flex justify-between items-center hover:bg-gray-50 transition-colors text-left"
@@ -270,7 +270,7 @@ export function ReturnManager({ employees, distribution, setDistribution, global
               </button>
 
               {isSelected && (
-                <div className="p-3 border-t border-gray-100 space-y-4 bg-gray-50/50">
+                <div className="p-3 border-t border-gray-100 space-y-4 bg-gray-50/50 max-h-[400px] overflow-y-auto">
                   {/* Returns Section */}
                   <div className="space-y-1.5">
                     <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Devolução de Peças</h4>

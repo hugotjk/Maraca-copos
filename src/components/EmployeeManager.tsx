@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Employee } from '../types';
 import { Plus, Trash2, Edit2, Users, GripVertical } from 'lucide-react';
-import { Reorder } from 'motion/react';
+import { Reorder, useDragControls } from 'motion/react';
 
 interface EmployeeManagerProps {
   employees: Employee[];
@@ -16,10 +16,13 @@ export function EmployeeManager({ employees, setEmployees }: EmployeeManagerProp
   });
 
   const updateSectors = (list: Employee[]) => {
-    return list.map((emp, index) => ({
-      ...emp,
-      sector: `Leste ${(index + 1).toString().padStart(2, '0')}`
-    }));
+    return list.map((emp, index) => {
+      const isLast = index === list.length - 1 && list.length > 0;
+      return {
+        ...emp,
+        sector: isLast ? 'Promoção' : `Leste ${(index + 1).toString().padStart(2, '0')}`
+      };
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -50,7 +53,7 @@ export function EmployeeManager({ employees, setEmployees }: EmployeeManagerProp
 
   const handleDelete = (id: string) => {
     if (confirm('Tem certeza que deseja excluir este funcionário?')) {
-      setEmployees(employees.filter(emp => emp.id !== id));
+      setEmployees(updateSectors(employees.filter(emp => emp.id !== id)));
     }
   };
 
@@ -107,42 +110,64 @@ export function EmployeeManager({ employees, setEmployees }: EmployeeManagerProp
             axis="y" 
             values={employees} 
             onReorder={(newOrder) => setEmployees(updateSectors(newOrder))}
-            className="space-y-1.5"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"
           >
             {employees.map(employee => (
-              <Reorder.Item 
+              <EmployeeCard 
                 key={employee.id} 
-                value={employee}
-                className="bg-white py-2 px-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center active:scale-[0.98] transition-transform"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="cursor-grab active:cursor-grabbing p-1 text-gray-300">
-                    <GripVertical className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm text-gray-800">{employee.name}</h3>
-                    <p className="text-[10px] text-flu-maroon uppercase tracking-wider font-semibold">{employee.sector}</p>
-                  </div>
-                </div>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => handleEdit(employee)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(employee.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </Reorder.Item>
+                employee={employee} 
+                handleEdit={handleEdit} 
+                handleDelete={handleDelete} 
+              />
             ))}
           </Reorder.Group>
         )}
       </div>
     </div>
+  );
+}
+
+function EmployeeCard({ employee, handleEdit, handleDelete }: { 
+  employee: Employee, 
+  handleEdit: (e: Employee) => void, 
+  handleDelete: (id: string) => void,
+  key?: React.Key
+}) {
+  const dragControls = useDragControls();
+
+  return (
+    <Reorder.Item 
+      value={employee}
+      dragListener={false}
+      dragControls={dragControls}
+      className="bg-white py-2 px-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center active:scale-[0.98] transition-transform"
+    >
+      <div className="flex items-center gap-3">
+        <div 
+          onPointerDown={(e) => dragControls.start(e)}
+          className="cursor-grab active:cursor-grabbing p-1 text-gray-300"
+        >
+          <GripVertical className="w-5 h-5" />
+        </div>
+        <div>
+          <h3 className="font-bold text-sm text-gray-800">{employee.name}</h3>
+          <p className="text-[10px] text-flu-maroon uppercase tracking-wider font-semibold">{employee.sector}</p>
+        </div>
+      </div>
+      <div className="flex gap-1" onPointerDown={e => e.stopPropagation()}>
+        <button
+          onClick={(e) => { e.stopPropagation(); handleEdit(employee); }}
+          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+        >
+          <Edit2 className="w-4 h-4" />
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); handleDelete(employee.id); }}
+          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+    </Reorder.Item>
   );
 }

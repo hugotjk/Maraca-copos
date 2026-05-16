@@ -11,6 +11,7 @@ export interface Product {
   commissionV: number;
   commissionG: number;
   quantity: number;
+  maxToDistribute?: number;
 }
 
 export interface Employee {

@@ -17,8 +17,9 @@ export function StockManager({ products, setProducts }: StockManagerProps) {
     description: '',
     price: 25,
     commissionV: 1.8,
-    commissionG: 0.5,
+    commissionG: 1.2,
     quantity: 0,
+    maxToDistribute: 0
   });
 
   const [isSyncing, setIsSyncing] = useState(false);
@@ -26,7 +27,7 @@ export function StockManager({ products, setProducts }: StockManagerProps) {
   const syncFromSpreadsheet = async () => {
     setIsSyncing(true);
     try {
-      const response = await fetch('https://docs.google.com/spreadsheets/d/1cghUaG5zUkN2hE3-B0x71kMwqC22bWjB-fyywR10sO4/export?format=csv');
+      const response = await fetch('https://docs.google.com/spreadsheets/d/10vo7GY8l0dWYh0oMQmGtE93OBflHtduZ/export?format=csv');
       const csvText = await response.text();
       
       const rows = csvText.split('\n').slice(1); // Skip header
@@ -50,7 +51,12 @@ export function StockManager({ products, setProducts }: StockManagerProps) {
 
           if (values.length < 5) return null;
           
-          const clean = (val: string) => {
+          const cleanString = (val: string) => {
+            if (!val) return '';
+            return val.replace(/^"|"$/g, '').replace(/\s+/g, ' ').trim();
+          };
+
+          const cleanNumber = (val: string) => {
             if (!val) return '0';
             let cleaned = val.replace(/^"|"$/g, '').replace(/[R$\s]/g, '').trim();
             // Handle Brazilian currency format (1.234,56)
@@ -62,14 +68,16 @@ export function StockManager({ products, setProducts }: StockManagerProps) {
             return cleaned;
           };
           
-          const name = clean(values[0]);
-          const description = clean(values[1]);
-          const price = parseFloat(clean(values[2]));
-          const commissionV = parseFloat(clean(values[3]));
-          const commissionG = parseFloat(clean(values[4]));
-          const quantity = values.length >= 6 ? parseInt(clean(values[5])) : 0;
+          const name = cleanString(values[0]);
+          const description = cleanString(values[1]);
+          const price = parseFloat(cleanNumber(values[2]));
+          const commissionV = parseFloat(cleanNumber(values[3]));
+          const commissionG = parseFloat(cleanNumber(values[4]));
+          const quantity = values.length >= 6 ? parseInt(cleanNumber(values[5])) : 0;
+          const maxToDistribute = values.length >= 7 ? parseInt(cleanNumber(values[6])) : 0;
           
-          const existing = products.find(p => p.name === name);
+          const normalizedName = name.replace(/\s+/g, '').toLowerCase();
+          const existing = products.find(p => p.name.replace(/\s+/g, '').toLowerCase() === normalizedName);
           
           return {
             id: existing?.id || crypto.randomUUID(),
@@ -78,10 +86,11 @@ export function StockManager({ products, setProducts }: StockManagerProps) {
             price: isNaN(price) ? 0 : price,
             commissionV: isNaN(commissionV) ? 0 : commissionV,
             commissionG: isNaN(commissionG) ? 0 : commissionG,
-            quantity: isNaN(quantity) ? (existing?.quantity || 0) : quantity
+            quantity: isNaN(quantity) ? (existing?.quantity || 0) : quantity,
+            maxToDistribute: isNaN(maxToDistribute) ? (existing?.maxToDistribute || 0) : maxToDistribute
           };
         })
-        .filter((p): p is Product => p !== null);
+        .filter(p => p !== null) as Product[];
 
       if (newProducts.length > 0) {
         setProducts(newProducts);
@@ -157,6 +166,7 @@ export function StockManager({ products, setProducts }: StockManagerProps) {
       commissionV: product.commissionV,
       commissionG: product.commissionG,
       quantity: product.quantity,
+      maxToDistribute: product.maxToDistribute || 0,
     });
     setEditingId(product.id);
     setIsAdding(true);
@@ -209,23 +219,25 @@ export function StockManager({ products, setProducts }: StockManagerProps) {
         </div>
       </div>
 
-      <Reorder.Group axis="y" values={products} onReorder={setProducts} className="space-y-1">
+      <Reorder.Group axis="y" values={products} onReorder={setProducts} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {products.length === 0 && !isAdding ? (
-          <div className="bg-white p-8 text-center text-gray-500 italic rounded-xl border border-dashed border-gray-300">
+          <div className="col-span-full bg-white p-8 text-center text-gray-500 italic rounded-xl border border-dashed border-gray-300">
             Nenhum produto cadastrado.
           </div>
         ) : (
           <>
             {isAdding && !editingId && (
-              <ProductForm 
-                formData={formData} 
-                setFormData={setFormData} 
-                handleSubmit={handleSubmit} 
-                onCancel={() => setIsAdding(false)} 
-              />
+              <div className="col-span-full">
+                <ProductForm 
+                  formData={formData} 
+                  setFormData={setFormData} 
+                  handleSubmit={handleSubmit} 
+                  onCancel={() => setIsAdding(false)} 
+                />
+              </div>
             )}
             {products.map(product => (
-              <React.Fragment key={product.id}>
+              <div key={product.id} className="space-y-1">
                 <ProductItem 
                   product={product} 
                   handleEdit={handleEdit} 
@@ -245,7 +257,7 @@ export function StockManager({ products, setProducts }: StockManagerProps) {
                     />
                   </div>
                 )}
-              </React.Fragment>
+              </div>
             ))}
           </>
         )}
@@ -316,6 +328,16 @@ function ProductForm({ formData, setFormData, handleSubmit, onCancel }: {
           />
         </div>
         <div className="space-y-1">
+          <label className="text-[10px] font-black text-gray-400 uppercase">Máx. Dist.</label>
+          <input
+            required
+            type="number"
+            value={formData.maxToDistribute || 0}
+            onChange={e => setFormData({ ...formData, maxToDistribute: parseInt(e.target.value) })}
+            className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-flu-maroon outline-none text-sm"
+          />
+        </div>
+        <div className="space-y-1">
           <label className="text-[10px] font-black text-gray-400 uppercase">Estoque</label>
           <input
             required
@@ -359,63 +381,62 @@ function ProductItem({ product, handleEdit, handleDelete, handleQuantityChange }
       value={product}
       dragListener={false}
       dragControls={dragControls}
-      className="bg-white py-1.5 px-3 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between gap-2 active:scale-[0.98] transition-transform"
+      className="bg-white py-3 px-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between gap-3 active:scale-[0.98] transition-transform"
     >
-      <div className="flex items-center gap-2 flex-1 min-w-0">
+      <div className="flex items-center gap-3 flex-1 min-w-0">
         <div 
           onPointerDown={(e) => dragControls.start(e)}
           className="cursor-grab active:cursor-grabbing p-1 text-gray-300"
         >
           <GripVertical className="w-4 h-4" />
         </div>
-        <div className="flex-1 min-w-0">
+        <div>
           <div className="flex items-center gap-2">
-            <h3 className="font-bold text-sm text-gray-800 truncate">{product.name}</h3>
+            <h3 className="font-bold text-base text-gray-800 truncate">{product.name}</h3>
             <button 
               onClick={() => handleEdit(product)}
               className="text-gray-300 hover:text-flu-maroon transition-colors"
             >
-              <Edit2 className="w-3 h-3" />
+              <Edit2 className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
       </div>
       
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3" onPointerDown={e => e.stopPropagation()}>
         <div className="flex flex-col items-end">
-          <span className="text-[8px] font-black text-gray-400 uppercase mb-0.5">Qtd</span>
-          <div className="flex items-center bg-gray-50 rounded-lg border border-gray-200 overflow-hidden pr-1">
+          <div className="flex items-center bg-gray-50 rounded-lg border border-gray-200 overflow-hidden pr-2">
             <input
               type="number"
               value={product.quantity}
               onFocus={(e) => e.target.select()}
               onChange={(e) => handleQuantityChange(product.id, parseInt(e.target.value))}
               className={cn(
-                "w-12 py-1 text-center font-black text-sm bg-transparent outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
-                product.quantity <= 5 ? "text-red-700" : "text-gray-700"
+                "w-16 py-2 text-center font-black text-lg bg-transparent outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+                product.quantity <= (product.maxToDistribute || 0) * 2 ? "text-amber-600" : "text-gray-700"
               )}
             />
             <div className="flex flex-col border-l border-gray-200">
               <button 
-                onClick={() => handleQuantityChange(product.id, product.quantity + 1)}
-                className="px-1 text-gray-400 hover:text-flu-maroon transition-colors border-b border-gray-100"
+                onClick={(e) => { e.stopPropagation(); handleQuantityChange(product.id, product.quantity + 1); }}
+                className="px-1.5 py-1 text-gray-400 hover:text-flu-maroon transition-colors border-b border-gray-100"
               >
-                <ChevronUp className="w-2.5 h-2.5" />
+                <ChevronUp className="w-3.5 h-3.5" />
               </button>
               <button 
-                onClick={() => handleQuantityChange(product.id, product.quantity - 1)}
-                className="px-1 text-gray-400 hover:text-flu-maroon transition-colors"
+                onClick={(e) => { e.stopPropagation(); handleQuantityChange(product.id, product.quantity - 1); }}
+                className="px-1.5 py-1 text-gray-400 hover:text-flu-maroon transition-colors"
               >
-                <ChevronDown className="w-2.5 h-2.5" />
+                <ChevronDown className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
         </div>
         <button
-          onClick={() => handleDelete(product.id)}
-          className="p-1.5 text-gray-200 hover:text-red-500 transition-colors"
+          onClick={(e) => { e.stopPropagation(); handleDelete(product.id); }}
+          className="p-2 text-gray-200 hover:text-red-500 transition-colors"
         >
-          <Trash2 className="w-3.5 h-3.5" />
+          <Trash2 className="w-4 h-4" />
         </button>
       </div>
     </Reorder.Item>
