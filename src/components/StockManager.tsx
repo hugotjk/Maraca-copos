@@ -219,7 +219,7 @@ export function StockManager({ products, setProducts }: StockManagerProps) {
         </div>
       </div>
 
-      <Reorder.Group axis="y" values={products} onReorder={setProducts} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+      <Reorder.Group axis="y" values={products} onReorder={setProducts} className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {products.length === 0 && !isAdding ? (
           <div className="col-span-full bg-white p-8 text-center text-gray-500 italic rounded-xl border border-dashed border-gray-300">
             Nenhum produto cadastrado.
